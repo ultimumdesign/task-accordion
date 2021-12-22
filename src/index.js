@@ -1,0 +1,1 @@
+import './recro-task-accordion';

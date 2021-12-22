@@ -1,0 +1,66 @@
+{
+	"components": {
+		"recro-task-accordion": {
+			"innerComponents": [
+				"now-accordion",
+				"now-highlighted-value",
+				"now-button",
+				"now-card",
+				"now-dropdown"
+			],
+			"uiBuilder": {
+				"associatedTypes": [
+					"global.core",
+					"global.landing-page"
+				],
+				"label": "Task Accordion",
+				"icon": "document-outline",
+				"description": "Task accordion component ",
+				"category": "primitives"
+			},
+			"properties": [
+				{
+					"name": "data",
+					"label": "Data",
+					"description": "Data to inject into component",
+					"readOnly": false,
+					"required": false,
+					"defaultValue": ""
+				},
+				{
+					"name": "tableName",
+					"label": "Table",
+					"description": "Name of table to pull tasks forms",
+					"readOnly": false,
+					"required": false,
+					"defaultValue": ""
+				},
+				{
+					"name": "statusItems",
+					"label": "Status Items",
+					"description": "Array of status items/choices",
+					"readOnly": false,
+					"required": false,
+					"defaultValue": ""
+				},
+				{
+					"name": "debugMode",
+					"label": "Debug Mode",
+					"description": "Toggle for debugging",
+					"readOnly": false,
+					"required": false,
+					"defaultValue": ""
+				},
+				{
+					"name": "textAreaRows",
+					"label": "Rows for Text Areas",
+					"description": "Set for text area row height",
+					"readOnly": false,
+					"required": false,
+					"defaultValue": ""
+				}
+			]
+		}
+	},
+	"scopeName": "x_recro_recro_ta_0"
+}
