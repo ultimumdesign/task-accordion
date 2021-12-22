@@ -6,6 +6,7 @@ import styles from './styles.scss'
 
 import '@servicenow/now-accordion'
 import '@servicenow/now-button'
+import '@servicenow/now-dropdown'
 import '@servicenow/now-highlighted-value'
 import '@servicenow/now-input'
 
@@ -52,15 +53,7 @@ const view = (state, { updateState, dispatch }) => {
     : <div />
 
   const taskItems = data.map((task) => {
-    const statusItems = properties.statusItems.items.map(item => {
-      return (
-        <option
-          key={item.id}
-          selected={task.status.value === item.id} value={item.id}
-        >{item.label}
-        </option>
-      )
-    })
+    const statusItems = properties.statusItems.items
     const justifySection = state.selectedTask.status && state.selectedTask.status.value === 'Exception Approved'
       ? (
         <div>
@@ -107,11 +100,7 @@ const view = (state, { updateState, dispatch }) => {
         />
         <div slot='content'>
           <div className='control-label'>Status</div>
-          <div className='recro-task-form'>
-            <select className='form-control' required='true' aria-required='true' on-change={(e) => inputChanged('selectedTask.status.value', e.target.value, task)}>
-              {statusItems}
-            </select>
-          </div>
+          <now-dropdown className='recro-task-form' placeholder={task.status.value} items={statusItems} select='single' />
           {justifySection}
           <div className='taskBtnBar'>
             <now-button
@@ -197,6 +186,21 @@ createCustomElement('recro-task-accordion', {
       updateState({
         path: `selectedTask.${name}.value`,
         value,
+        operation: 'set'
+      })
+
+      dispatch('SAVE_BUTTON_WATCHED')
+    },
+    'NOW_DROPDOWN#ITEM_CLICKED': ({ action, dispatch, updateState, state, properties }) => {
+      const { item } = action.payload
+
+      if (properties.debugMode) {
+        console.debug('item:', item)
+      }
+
+      updateState({
+        path: 'selectedTask.status.value',
+        value: item.id,
         operation: 'set'
       })
 

@@ -20,6 +20,7 @@
 		"@servicenow/library-translate": "rome",
 		"@servicenow/now-accordion": "^19.8.2-ecd",
 		"@servicenow/now-button": "^19.8.2-ecd",
+		"@servicenow/now-dropdown": "^19.8.2-ecd",
 		"@servicenow/now-highlighted-value": "^19.8.2-ecd",
 		"@servicenow/now-input": "^19.8.2-ecd",
 		"@servicenow/now-textarea": "^19.8.2-ecd",
