@@ -9,6 +9,19 @@
     display: flow-root
 }
 
+.recro-form-wrapper {
+	position: relative;
+	margin: 3em .5em 1em .5em;
+}
+
+.recro-form-wrapper > label {
+    position: absolute;
+    bottom: 2.25em;
+    left: .25em;
+    font-family: var(--mv9-PvZT-PAtjp_jrktj--Pvmz-PrTAjO,var(--now-font-family,"Source Sans Pro",Arial,));
+    text-transform: var(--mv9-PvZT-PAtjp_jrktj--ztuz-zZrm1PvZT,none);
+    color: RGB(var(--mv9-PvZT-PAtjp_jrktj--JvjvZ,var(--now-color_text--tertiary,var(--now-color--neutral-9,99,114,116))));
+  }
 
 .control-label {
     padding-left: 1.25em;
@@ -16,6 +29,14 @@
 
 .rero-accordion-main {
     padding: .5em;
+}
+
+input.form-control:invalid {
+    border-color: RGB(var(--mv9-PvZT-PAtjp_jrktj--JvjvZ--AmsrjAp,var(--now-color_alert--critical-2,200,60,54)));
+    border-style: solid;
+}
+input.form-control:invalid ~ label {
+    color: RGB(var(--mv9-PvZT-PAtjp_jrktj--JvjvZ--AmsrjAp,var(--now-color_alert--critical-2,200,60,54)));
 }
 /* libraries */
 

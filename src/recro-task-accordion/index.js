@@ -8,10 +8,22 @@ import '@servicenow/now-accordion'
 import '@servicenow/now-button'
 import '@servicenow/now-dropdown'
 import '@servicenow/now-highlighted-value'
+import '@servicenow/now-icon'
 import '@servicenow/now-input'
+import '@servicenow/now-textarea'
 
 function isObjectEqual (obj, source) {
   return Object.keys(source).every(key => key in obj && obj[key].value === source[key].value)
+}
+
+function isObjectValid (obj) {
+  if (obj.status.value !== 'Exception Approved') {
+    const required = ['url']
+    return required.every(key => obj[key].value !== '')
+  } else {
+    const required = ['justification', 'exception_approval_date', 'exception_approvers']
+    return required.every(key => obj[key].value !== '')
+  }
 }
 
 function transformData (obj) {
@@ -53,33 +65,37 @@ const view = (state, { updateState, dispatch }) => {
     : <div />
 
   const taskItems = data.map((task) => {
-    const statusItems = properties.statusItems.items
+    const statusItems = properties.statusItems.items.map(item => {
+      return (
+        <option
+          key={item.id} value={item.id} selected={task.status.value === item.id ? 'selected' : false}
+        >{item.label}
+        </option>
+      )
+    })
     const justifySection = state.selectedTask.status && state.selectedTask.status.value === 'Exception Approved'
       ? (
         <div>
-          <div className='control-label'>Justification</div>
-          <div className='recro-task-form'>
-            <textarea
-              value={task.justification.value}
-              className='form-control'
-              required
-              rows={properties.textAreaRows}
-              on-input={(e) => { inputChanged('selectedTask.justification.value', e.target.value, task) }}
-            />
-          </div>
-          <div className='control-label'>Exception Approval Date</div>
-          <div className='recro-task-form'>
+          <now-textarea
+            className='recro-task-form' name='justification'
+            label={state.selectedTask.justification.label} value={task.justification.value}
+            required={state.selectedTask.status && state.selectedTask.status.value === 'Exception Approved'}
+            rows={properties.textAreaRows}
+          />
+          <div className='recro-form-wrapper'>
             <input
-              className='form-control' required='required' type='date' aria-required='true' value={task.exception_approval_date.value}
+              className='form-control' name='exception_approval_date'
+              required='required' type='date' aria-required='true' value={task.exception_approval_date.value}
               on-input={(e) => { inputChanged('selectedTask.exception_approval_date.value', e.target.value, task) }}
             />
+            <label for='exception_approval_date'>{task.exception_approval_date.label} <now-icon icon='asterisk-fill' size='sm' /></label>
           </div>
-          <div className='control-label'>Exception Approvers</div>
-          <div className='recro-task-form'>
+          <div className='recro-form-wrapper'>
             <input
               className='form-control' required='required' type='text' aria-required='true' value={task.exception_approvers.value}
               on-input={(e) => { inputChanged('selectedTask.exception_approvers.value', e.target.value, task) }}
             />
+            <label for='exception_approvers'>{task.exception_approvers.label} <now-icon icon='asterisk-fill' size='sm' /></label>
           </div>
         </div>
         )
@@ -87,7 +103,7 @@ const view = (state, { updateState, dispatch }) => {
         <now-input-url
           className='recro-task-form'
           value={task.url.value} label={task.url.label}
-          name='url' required={() => { return state.selectedTask.status.value !== 'Exception Approved' }}
+          name='url' required={(state.selectedTask.status && state.selectedTask.status.value !== 'Exception Approved')}
         />
         )
     return (
@@ -99,13 +115,21 @@ const view = (state, { updateState, dispatch }) => {
           slot='metadata' label={task.status.value} variant='tertiary'
         />
         <div slot='content'>
-          <div className='control-label'>Status</div>
-          <now-dropdown className='recro-task-form' placeholder={task.status.value} items={statusItems} select='single' />
+          <div className='recro-form-wrapper'>
+            <select
+              className='form-control' name='status' value={task.status.value}
+              on-change={(e) => inputChanged('selectedTask.status.value', e.target.value, task)}
+            >
+              {statusItems}
+            </select>
+            <label for='status'>{task.status.label}</label>
+          </div>
           {justifySection}
           <div className='taskBtnBar'>
             <now-button
               on-click={() => taskSaveButtonClicked()} className='taskBtn'
-              label='Save' variant='primary' size='md' icon='' config-aria={{}} tooltip-content='' disabled={!state.isTaskModified}
+              label='Save' variant='primary' size='md' icon='' config-aria={{}}
+              tooltip-content='' disabled={state.isTaskObjectEqual || (state.isTaskValid === false)}
             />
           </div>
         </div>
@@ -117,7 +141,7 @@ const view = (state, { updateState, dispatch }) => {
       <now-accordion
         expand-single
         heading-level='2'
-        trigger-icon={{ type: 'plus-minus', position: 'start' }}
+        trigger-icon={{ type: 'chevron', position: 'end' }}
       >
         {taskItems}
         {debugBar}
@@ -143,6 +167,9 @@ createCustomElement('recro-task-accordion', {
       console.info('SAVE SUCCESS')
       dispatch('TASK_ACCORDION_REFRESH')
     },
+    TASK_ACCORDION_STATUS_REFRESH: ({ action, dispatch, updateProperties, state, properties }) => {
+      updateProperties({ statusItems: { items: [...properties.statusItems.items] } })
+    },
     'NOW_ACCORDION_ITEM#CLICKED': ({ action, dispatch, updateState, state, properties }) => {
       // console.debug('payload', action.payload)
       if (!state.selectedTask.sys_id) {
@@ -154,53 +181,78 @@ createCustomElement('recro-task-accordion', {
         const taskData = { ...action.payload }
         updateState({ selectedTask: taskData })
         updateState({ selectedTaskClean: taskData })
-        updateState({ isTaskModified: false })
-        dispatch('TASK_ACCORDION_REFRESH')
+        dispatch('TASK_ACCORDION_STATUS_REFRESH')
       }
     },
     SAVE_BUTTON_WATCHED: ({ action, dispatch, updateState, state, properties }) => {
       const objectIsEqual = isObjectEqual(state.selectedTask, state.selectedTaskClean)
-      if (properties.debugMode) console.debug(objectIsEqual)
-      if (objectIsEqual === false) {
-        updateState({
-          path: 'isTaskModified',
-          value: true,
-          operation: 'set'
-        })
-        return
+      const objectIsValid = isObjectValid(state.selectedTask)
+      if (properties.debugMode) {
+        console.debug('object is the same:', objectIsEqual)
+        console.debug('object is valid:', objectIsValid)
       }
+      if (objectIsEqual === false) {
+        dispatch('SAVE_BUTTON_UPDATE_REQUEST', { path: 'isTaskObjectEqual', value: false })
+      } else {
+        dispatch('SAVE_BUTTON_UPDATE_REQUEST', { path: 'isTaskObjectEqual', value: true })
+      }
+      if (objectIsValid === true) {
+        dispatch('SAVE_BUTTON_UPDATE_REQUEST', { path: 'isTaskValid', value: true })
+      } else {
+        dispatch('SAVE_BUTTON_UPDATE_REQUEST', { path: 'isTaskValid', value: false })
+      }
+    },
+    SAVE_BUTTON_UPDATE_REQUEST: ({ action, dispatch, updateState, state, properties }) => {
+      const { path, value } = action.payload
       updateState({
-        path: 'isTaskModified',
-        value: false,
+        path: path,
+        value,
         operation: 'set'
       })
     },
-    'NOW_INPUT_URL#VALUE_SET': ({ action, dispatch, updateState, state, properties }) => {
-      const { name, value } = action.payload
+    'NOW_INPUT_URL#INPUT': ({ action, dispatch, updateState, state, properties }) => {
+      const { name, data, fieldValue } = action.payload
 
       if (properties.debugMode) {
         console.debug('name:', name)
-        console.debug('value:', value)
+        console.debug('data:', data)
+        console.debug('value:', fieldValue)
       }
 
       updateState({
         path: `selectedTask.${name}.value`,
-        value,
+        value: fieldValue,
         operation: 'set'
       })
 
       dispatch('SAVE_BUTTON_WATCHED')
     },
-    'NOW_DROPDOWN#ITEM_CLICKED': ({ action, dispatch, updateState, state, properties }) => {
-      const { item } = action.payload
+    'NOW_INPUT_URL#INVALID_SET': ({ action, dispatch, updateState, state, properties }) => {
+      const { name, value, fieldValue } = action.payload
 
       if (properties.debugMode) {
-        console.debug('item:', item)
+        console.debug('name:', name)
+        console.debug('invalid:', value)
+        console.debug('value:', fieldValue)
       }
 
       updateState({
-        path: 'selectedTask.status.value',
-        value: item.id,
+        path: 'isTaskValid',
+        value: false,
+        operation: 'set'
+      })
+    },
+    'NOW_TEXTAREA#INPUT': ({ action, dispatch, updateState, state, properties }) => {
+      const { name, fieldValue } = action.payload
+
+      if (properties.debugMode) {
+        console.debug('name:', name)
+        console.debug('value:', fieldValue)
+      }
+
+      updateState({
+        path: `selectedTask.${name}.value`,
+        value: fieldValue,
         operation: 'set'
       })
 
@@ -209,7 +261,8 @@ createCustomElement('recro-task-accordion', {
   },
   initialState: {
     selectedTask: {},
-    isTaskModified: false
+    isTaskObjectEqual: true,
+    isTaskValid: false
   },
   properties: {
     data: {
