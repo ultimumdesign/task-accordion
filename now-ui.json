@@ -3,10 +3,16 @@
 		"recro-task-accordion": {
 			"innerComponents": [
 				"now-accordion",
+				"now-alert",
 				"now-highlighted-value",
+				"now-icon",
+				"now-input",
 				"now-button",
-				"now-card",
-				"now-dropdown"
+				"now-dropdown",
+				"now-modal",
+				"now-rich-text",
+				"now-textarea",
+				"now-typeahead"
 			],
 			"uiBuilder": {
 				"associatedTypes": [
@@ -31,6 +37,14 @@
 					"name": "tableName",
 					"label": "Table",
 					"description": "Name of table to pull tasks forms",
+					"readOnly": false,
+					"required": false,
+					"defaultValue": ""
+				},
+				{
+					"name": "approverItems",
+					"label": "Approver User Items",
+					"description": "Array of user items",
 					"readOnly": false,
 					"required": false,
 					"defaultValue": ""

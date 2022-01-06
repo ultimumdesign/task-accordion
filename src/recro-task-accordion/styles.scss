@@ -4,6 +4,23 @@
     margin: 1em;
 }
 
+.inputBtnIcon {
+    margin: .25em;
+}
+
+.recro-accordion-item {
+    background: #fcfcfc;
+    border: solid;
+    border-color: #e2e2e2;
+    border-width: 1px;
+    border-radius: 5px;
+    margin-bottom: .25em;
+}
+
+.recro-task-description {
+    margin-bottom: 3em;
+}
+
 .recro-task-form {
     padding: .5em;
     display: flow-root
@@ -11,7 +28,7 @@
 
 .recro-form-wrapper {
 	position: relative;
-	margin: 3em .5em 1em .5em;
+	margin: 2em .5em 1em .5em;
 }
 
 .recro-form-wrapper > label {
@@ -21,7 +38,8 @@
     font-family: var(--mv9-PvZT-PAtjp_jrktj--Pvmz-PrTAjO,var(--now-font-family,"Source Sans Pro",Arial,));
     text-transform: var(--mv9-PvZT-PAtjp_jrktj--ztuz-zZrm1PvZT,none);
     color: RGB(var(--mv9-PvZT-PAtjp_jrktj--JvjvZ,var(--now-color_text--tertiary,var(--now-color--neutral-9,99,114,116))));
-  }
+}
+
 
 .control-label {
     padding-left: 1.25em;
@@ -38,6 +56,8 @@ input.form-control:invalid {
 input.form-control:invalid ~ label {
     color: RGB(var(--mv9-PvZT-PAtjp_jrktj--JvjvZ--AmsrjAp,var(--now-color_alert--critical-2,200,60,54)));
 }
+
+
 /* libraries */
 
 /*! RESOURCE: styles/retina_icons/retina_icons.css */
