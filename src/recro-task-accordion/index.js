@@ -102,6 +102,7 @@ const view = (state, { updateState, dispatch }) => {
             <input
               className='form-control' name='exception_approval_date'
               type='date' required={state.selectedTask.status && state.selectedTask.status.value === 'Exception Approved'}
+              value={task.exception_approval_date.value}
               invalid={state.selectedTask.exception_approval_date && !(state.selectedTask.exception_approval_date.value)}
               on-input={(e) => { inputChanged('selectedTask.exception_approval_date.value', e.target.value, task) }}
             />
@@ -140,13 +141,16 @@ const view = (state, { updateState, dispatch }) => {
     return (
       <now-accordion-item
         className='recro-accordion-item'
-        on-click={(e) => taskItemClicked(task)} header={{ label: task.task_catalog_ref.displayValue, variant: 'secondary', size: 'sm' }}
+        on-click={(e) => taskItemClicked(task)} header={{ label: task.task_catalog_ref.displayValue, variant: 'secondary', size: 'md' }}
         key={task.sys_id.value} caption={{ label: task.is_required.value ? 'Required' : 'Optional', variant: 'secondary', style: 'italic' }}
       >
         <now-highlighted-value
           slot='metadata' label={task.status.value} variant='tertiary'
         />
         <div slot='content'>
+          <div className='recro-alert-bar'>
+            {state.isAlertOpen ? <now-alert status='positive' icon='exclamation-triangle-fill' action={{ type: 'dismiss' }} header='Success:' content='Task was updated.' /> : <span />}
+          </div>
           <div className='recro-task-description'>
             <now-rich-text html={task.task_catalog_ref._reference ? task.task_catalog_ref._reference.task_description.value : '<h5>Test Description</h5>'} />
           </div>
@@ -166,7 +170,6 @@ const view = (state, { updateState, dispatch }) => {
               label='Save' variant='primary' size='md' icon='' config-aria={{}}
               tooltip-content='' disabled={state.isTaskObjectEqual || (state.isTaskValid === false)}
             />
-            {state.isAlertOpen ? <now-alert status='positive' icon='exclamation-triangle-fill' header='Success:' content='Task was updated.' /> : <span />}
           </div>
         </div>
       </now-accordion-item>
@@ -226,6 +229,11 @@ createCustomElement('recro-task-accordion', {
         const taskData = { ...action.payload }
         updateState({ selectedTask: taskData })
         updateState({ selectedTaskClean: taskData })
+        updateState({
+          path: 'isAlertOpen',
+          value: false,
+          operation: 'set'
+        })
         dispatch('TASK_ACCORDION_STATUS_REFRESH')
       }
     },
@@ -281,6 +289,22 @@ createCustomElement('recro-task-accordion', {
       updateState({
         path: `selectedTask.${name}.value`,
         value,
+        operation: 'set'
+      })
+
+      dispatch('SAVE_BUTTON_WATCHED')
+    },
+    'NOW_TEXTAREA#INPUT': ({ action, dispatch, updateState, state, properties }) => {
+      const { name, fieldValue } = action.payload
+
+      if (properties.debugMode) {
+        console.debug('name:', name)
+        console.debug('value:', fieldValue)
+      }
+
+      updateState({
+        path: `selectedTask.${name}.value`,
+        value: fieldValue,
         operation: 'set'
       })
 
@@ -356,6 +380,19 @@ createCustomElement('recro-task-accordion', {
       dispatch('NOW_TYPEAHEAD_MULTI#SELECTED_ITEMS_SET', { name: 'exception_approvers', value: [...valueAsArray, newApproverItem] })
       updateState({
         path: 'isModalOpen',
+        value: false,
+        operation: 'set'
+      })
+    },
+    'NOW_ALERT#ACTION_CLICKED': ({ action, dispatch, updateState, state, properties }) => {
+      const value = action.payload
+
+      if (properties.debugMode) {
+        console.debug('value:', value)
+      }
+
+      updateState({
+        path: 'isAlertOpen',
         value: false,
         operation: 'set'
       })
