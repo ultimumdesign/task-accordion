@@ -20,13 +20,13 @@ function isObjectEqual (obj, source) {
 }
 
 function isObjectValid (obj) {
-  if (obj.status.value !== 'Exception Approved') {
-    const required = ['url']
-    return required.every(key => (obj[key].value !== '' && obj[key].value !== null))
-  } else {
-    const required = ['justification', 'exception_approval_date', 'exception_approvers']
-    return required.every(key => (obj[key].value !== '' && obj[key].value !== null))
-  }
+  let required
+  if (obj.status.value === 'Exception Approved') {
+    required = ['justification', 'exception_approval_date', 'exception_approvers']
+  } else if (obj.status.value === 'Completed') {
+    required = ['closed_at', 'url']
+  } else required = []
+  return required.every(key => (obj[key].value !== '' && obj[key].value !== null))
 }
 
 function transformData (obj) {
@@ -42,6 +42,7 @@ const view = (state, { updateState, dispatch }) => {
 
   function taskSaveButtonClicked () {
     const dataObj = transformData(state.selectedTask)
+    updateState({ selectedTaskClean: { ...state.selectedTask } })
     dispatch('TASK_BUTTON#SAVE', { data: JSON.stringify(dataObj), id: dataObj.sys_id, table: properties.tableName })
   }
 
@@ -58,24 +59,6 @@ const view = (state, { updateState, dispatch }) => {
     })
     dispatch('SAVE_BUTTON_WATCHED')
   }
-
-  // function getToday () {
-  //   let today = new Date()
-  //   let dd = today.getDate()
-  //   let mm = today.getMonth() + 1 // January is 0!
-  //   const yyyy = today.getFullYear()
-
-  //   if (dd < 10) {
-  //     dd = '0' + dd
-  //   }
-
-  //   if (mm < 10) {
-  //     mm = '0' + mm
-  //   }
-
-  //   today = yyyy + '-' + mm + '-' + dd
-  //   return today
-  // }
 
   const debugBar = properties.debugMode
     ? (
@@ -132,11 +115,36 @@ const view = (state, { updateState, dispatch }) => {
         </div>
         )
       : (
-        <now-input-url
-          className='recro-task-form'
-          value={task.url.value} label={task.url.label} placeholder='https://'
-          name='url' required={(state.selectedTask.status && state.selectedTask.status.value !== 'Exception Approved')}
-        />
+        <div>
+          <div className='recro-form-wrapper'>
+            <input
+              className='form-control' name='expected_start'
+              type='date' value={task.expected_start.value}
+              on-input={(e) => { inputChanged('selectedTask.expected_start.value', e.target.value, task) }}
+            />
+            <label for='expected_start'>{task.expected_start.label}</label>
+          </div>
+          {state.selectedTask.status && state.selectedTask.status.value === 'Completed'
+            ? (
+              <div className='recro-form-wrapper'>
+                <input
+                  className='form-control' name='closed_at'
+                  type='date' required={state.selectedTask.status && state.selectedTask.status.value === 'Completed'}
+                  value={task.closed_at.value}
+                  invalid={state.selectedTask.closed_at && !(state.selectedTask.closed_at.value)}
+                  on-input={(e) => { inputChanged('selectedTask.closed_at.value', e.target.value, task) }}
+                />
+                <label for='closed_at'>{task.closed_at.label} <now-icon icon='asterisk-fill' size='sm' /></label>
+              </div>
+              )
+            : <div />}
+          <now-input-url
+            className='recro-task-form'
+            value={task.url.value} label={task.url.label} placeholder='https://'
+            name='url' required={(state.selectedTask.status && state.selectedTask.status.value === 'Completed')}
+            invalid={(state.selectedTask.status && state.selectedTask.status.value === 'Completed') && !(state.selectedTask.url.value)}
+          />
+        </div>
         )
     return (
       <now-accordion-item
@@ -148,8 +156,8 @@ const view = (state, { updateState, dispatch }) => {
           slot='metadata' label={task.status.value} variant='tertiary'
         />
         <div slot='content'>
-          <div className='recro-alert-bar'>
-            {state.isAlertOpen ? <now-alert status='positive' icon='exclamation-triangle-fill' action={{ type: 'dismiss' }} header='Success:' content='Task was updated.' /> : <span />}
+          <div className={state.isAlertOpen ? 'recro-alert-bar' : 'recro-alert-bar hidden'}>
+            <now-alert status='positive' icon='exclamation-triangle-fill' action={{ type: 'dismiss' }} header='Success:' content='Task was updated.' />
           </div>
           <div className='recro-task-description'>
             <now-rich-text html={task.task_catalog_ref._reference ? task.task_catalog_ref._reference.task_description.value : '<h5>Test Description</h5>'} />
@@ -166,7 +174,9 @@ const view = (state, { updateState, dispatch }) => {
           {justifySection}
           <div className='taskBtnBar'>
             <now-button
-              on-click={() => taskSaveButtonClicked()} className='taskBtn'
+              on-click={() => {
+                if (!(state.isTaskObjectEqual) && state.isTaskValid) { taskSaveButtonClicked() }
+              }} className='taskBtn'
               label='Save' variant='primary' size='md' icon='' config-aria={{}}
               tooltip-content='' disabled={state.isTaskObjectEqual || (state.isTaskValid === false)}
             />
@@ -210,13 +220,12 @@ createCustomElement('recro-task-accordion', {
       successActionType: 'TASK_BUTTON_SAVE_SUCCESS'
     }),
     TASK_BUTTON_SAVE_SUCCESS: ({ action, dispatch, updateState, state, properties }) => {
-      console.info('SAVE SUCCESS')
+      if (properties.debugMode) {
+        console.debug('payload', action.payload)
+      }
+      dispatch('SAVE_BUTTON_WATCHED')
       dispatch('TASK_ACCORDION_REFRESH')
-      updateState({ isTaskObjectEqual: true })
       updateState({ isAlertOpen: true })
-    },
-    TASK_ACCORDION_STATUS_REFRESH: ({ action, dispatch, updateProperties, state, properties }) => {
-      updateProperties({ statusItems: { items: [...properties.statusItems.items] } })
     },
     'NOW_ACCORDION_ITEM#CLICKED': ({ action, dispatch, updateState, state, properties }) => {
       // console.debug('payload', action.payload)
@@ -229,12 +238,7 @@ createCustomElement('recro-task-accordion', {
         const taskData = { ...action.payload }
         updateState({ selectedTask: taskData })
         updateState({ selectedTaskClean: taskData })
-        updateState({
-          path: 'isAlertOpen',
-          value: false,
-          operation: 'set'
-        })
-        dispatch('TASK_ACCORDION_STATUS_REFRESH')
+        updateState({ isAlertOpen: false })
       }
     },
     SAVE_BUTTON_WATCHED: ({ action, dispatch, updateState, state, properties }) => {
@@ -246,6 +250,7 @@ createCustomElement('recro-task-accordion', {
       }
       if (objectIsEqual === false) {
         dispatch('SAVE_BUTTON_UPDATE_REQUEST', { path: 'isTaskObjectEqual', value: false })
+        updateState({ isAlertOpen: false })
       } else {
         dispatch('SAVE_BUTTON_UPDATE_REQUEST', { path: 'isTaskObjectEqual', value: true })
       }
@@ -336,12 +341,14 @@ createCustomElement('recro-task-accordion', {
         if (prev === '') return `${curr.label}`
         else return `${prev},${curr.label}`
       }, '')
+
       if (properties.debugMode) {
         console.debug('name:', name)
         console.debug('value:', value)
         console.debug('newVal:', newValue)
         console.debug('newDisplayvalue:', newDisplayValue)
       }
+
       updateState({
         path: `selectedTask.${name}.value`,
         value: newValue,
@@ -372,11 +379,16 @@ createCustomElement('recro-task-accordion', {
     'NOW_RECORD_LIST_CONNECTED#ROW_CLICKED': ({ action, dispatch, updateState, state, properties }) => {
       const item = action.payload
       const newApproverItem = { id: item.sys_id, label: item.row.displayValue.value }
+
       if (properties.debugMode) {
         console.debug('approver item:', newApproverItem)
       }
-      const valueAsArray = state.selectedTask.exception_approvers.value.split(',')
-        .map(function (sysID, index) { return { id: sysID, label: state.selectedTask.exception_approvers.displayValue.split(',')[index] } })
+
+      const valueAsArray = state.selectedTask.exception_approvers.value
+        ? state.selectedTask.exception_approvers.value.split(',')
+            .map(function (sysID, index) { return { id: sysID, label: state.selectedTask.exception_approvers.displayValue.split(',')[index] } })
+        : []
+
       dispatch('NOW_TYPEAHEAD_MULTI#SELECTED_ITEMS_SET', { name: 'exception_approvers', value: [...valueAsArray, newApproverItem] })
       updateState({
         path: 'isModalOpen',
