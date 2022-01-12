@@ -78,7 +78,32 @@ const view = (state, { updateState, dispatch }) => {
       )
     })
     const approverItems = properties.approverItems.items
-    const justifySection = state.selectedTask.status && state.selectedTask.status.value === 'Exception Approved'
+    const completedSection = state.selectedTask.status && state.selectedTask.status.value === 'Completed'
+      ? (
+        <div className='recro-form-wrapper'>
+          <input
+            className='form-control' name='closed_at'
+            type='date' required={state.selectedTask.status && state.selectedTask.status.value === 'Completed'}
+            value={(task.closed_at.value && task.closed_at.value.split(' ').length) ? task.closed_at.value.split(' ')[0] : task.closed_at.value}
+            invalid={state.selectedTask.closed_at && !(state.selectedTask.closed_at.value)}
+            disabled={!task.closed_at.canWrite}
+            on-input={(e) => { inputChanged('selectedTask.closed_at.value', e.target.value, task) }}
+          />
+          <label for='closed_at'>{task.closed_at.label} <now-icon icon='asterisk-fill' size='sm' /></label>
+        </div>
+        )
+      : <div />
+    const delayedSection = state.selectedTask.status && state.selectedTask.status.value === 'Delayed'
+      ? (
+        <now-textarea
+          className='recro-task-form' name='additional_justification'
+          label={state.selectedTask.additional_justification.label} value={task.additional_justification.value}
+          disabled={!task.additional_justification.canWrite}
+          rows={properties.textAreaRows}
+        />
+        )
+      : <div />
+    const exceptionSection = state.selectedTask.status && state.selectedTask.status.value === 'Exception Approved'
       ? (
         <div>
           <div className='recro-form-wrapper'>
@@ -86,6 +111,7 @@ const view = (state, { updateState, dispatch }) => {
               className='form-control' name='exception_approval_date'
               type='date' required={state.selectedTask.status && state.selectedTask.status.value === 'Exception Approved'}
               value={task.exception_approval_date.value}
+              disabled={!task.exception_approval_date.canWrite}
               invalid={state.selectedTask.exception_approval_date && !(state.selectedTask.exception_approval_date.value)}
               on-input={(e) => { inputChanged('selectedTask.exception_approval_date.value', e.target.value, task) }}
             />
@@ -114,38 +140,8 @@ const view = (state, { updateState, dispatch }) => {
           </now-typeahead-multi>
         </div>
         )
-      : (
-        <div>
-          <div className='recro-form-wrapper'>
-            <input
-              className='form-control' name='expected_start'
-              type='date' value={task.expected_start.value}
-              on-input={(e) => { inputChanged('selectedTask.expected_start.value', e.target.value, task) }}
-            />
-            <label for='expected_start'>{task.expected_start.label}</label>
-          </div>
-          {state.selectedTask.status && state.selectedTask.status.value === 'Completed'
-            ? (
-              <div className='recro-form-wrapper'>
-                <input
-                  className='form-control' name='closed_at'
-                  type='date' required={state.selectedTask.status && state.selectedTask.status.value === 'Completed'}
-                  value={task.closed_at.value}
-                  invalid={state.selectedTask.closed_at && !(state.selectedTask.closed_at.value)}
-                  on-input={(e) => { inputChanged('selectedTask.closed_at.value', e.target.value, task) }}
-                />
-                <label for='closed_at'>{task.closed_at.label} <now-icon icon='asterisk-fill' size='sm' /></label>
-              </div>
-              )
-            : <div />}
-          <now-input-url
-            className='recro-task-form'
-            value={task.url.value} label={task.url.label} placeholder='https://'
-            name='url' required={(state.selectedTask.status && state.selectedTask.status.value === 'Completed')}
-            invalid={(state.selectedTask.status && state.selectedTask.status.value === 'Completed') && !(state.selectedTask.url.value)}
-          />
-        </div>
-        )
+      : <div />
+
     return (
       <now-accordion-item
         className='recro-accordion-item'
@@ -166,12 +162,34 @@ const view = (state, { updateState, dispatch }) => {
             <select
               className='form-control' name='status' value={state.selectedTask.status ? state.selectedTask.status.value : task.status.value}
               on-change={(e) => inputChanged('selectedTask.status.value', e.target.value, task)}
+              disabled={!task.status.canWrite}
             >
               {statusItems}
             </select>
             <label for='status'>{task.status.label}</label>
           </div>
-          {justifySection}
+          <div>
+            <div className='recro-form-wrapper'>
+              <input
+                className='form-control' name='expected_start'
+                type='date'
+                value={(task.expected_start.value && task.expected_start.value.split(' ').length) ? task.expected_start.value.split(' ')[0] : task.expected_start.value}
+                disabled={!task.expected_start.canWrite}
+                on-input={(e) => { inputChanged('selectedTask.expected_start.value', e.target.value, task) }}
+              />
+              <label for='expected_start'>{task.expected_start.label}</label>
+            </div>
+            {completedSection}
+            {exceptionSection}
+            {delayedSection}
+            <now-input-url
+              className='recro-task-form'
+              value={task.url.value} label={task.url.label} placeholder='https://'
+              name='url' required={(state.selectedTask.status && state.selectedTask.status.value === 'Completed')}
+              invalid={(state.selectedTask.status && state.selectedTask.status.value === 'Completed') && !(state.selectedTask.url.value)}
+              disabled={!task.url.canWrite}
+            />
+          </div>
           <div className='taskBtnBar'>
             <now-button
               on-click={() => {
@@ -228,7 +246,6 @@ createCustomElement('recro-task-accordion', {
       updateState({ isAlertOpen: true })
     },
     'NOW_ACCORDION_ITEM#CLICKED': ({ action, dispatch, updateState, state, properties }) => {
-      // console.debug('payload', action.payload)
       if (!state.selectedTask.sys_id) {
         const taskData = { ...action.payload }
         updateState({ selectedTask: taskData })
@@ -419,38 +436,13 @@ createCustomElement('recro-task-accordion', {
   },
   properties: {
     data: {
-      default: [
-        // {
-        //   sys_id: { value: 1 },
-        //   title: { value: 'Report Generation' },
-        //   description: { value: 'This is a task to enable the report generation.' },
-        //   status: { value: 'Not Started' },
-        //   status_color: { value: 'info' },
-        //   url: { value: 'https://service-now.com' }
-        // },
-        // {
-        //   sys_id: { value: 2 },
-        //   title: { value: 'Task Analysis' },
-        //   description: { value: 'This is a task that requires the analysis of task items.' },
-        //   status: { value: 'Completed' },
-        //   status_color: { value: 'positive' },
-        //   url: { value: 'https://service-now.com' }
-        // }
-      ]
+      default: []
     },
     statusItems: {
-      default: [
-        // { id: 'not_started', label: 'Not Started' },
-        // { id: 'in_progress', label: 'In Progress' },
-        // { id: 'completed', label: 'Completed' },
-        // { id: 'delayed'', label: 'Delayed' },
-        // { id: 'exception_approved', label: 'Exception Approved' }
-      ]
+      default: []
     },
     approverItems: {
-      default: [
-        // { id: 'sys_id', label: 'John Doe' },
-      ]
+      default: []
     },
     debugMode: {
       default: false
