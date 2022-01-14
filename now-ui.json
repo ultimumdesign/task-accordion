@@ -42,14 +42,6 @@
 					"defaultValue": ""
 				},
 				{
-					"name": "approverItems",
-					"label": "Approver User Items",
-					"description": "Array of user items",
-					"readOnly": false,
-					"required": false,
-					"defaultValue": ""
-				},
-				{
 					"name": "statusItems",
 					"label": "Status Items",
 					"description": "Array of status items/choices",

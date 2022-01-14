@@ -77,7 +77,6 @@ const view = (state, { updateState, dispatch }) => {
         </option>
       )
     })
-    const approverItems = properties.approverItems.items
     const completedSection = state.selectedTask.status && state.selectedTask.status.value === 'Completed'
       ? (
         <div className='recro-form-wrapper'>
@@ -126,17 +125,21 @@ const view = (state, { updateState, dispatch }) => {
             rows={properties.textAreaRows}
           />
           <now-typeahead-multi
-            manage-selected-items items={approverItems}
+            manage-selected-items items={properties.userItems}
             selected-items={state.selectedTask.exception_approvers.value
               ? state.selectedTask.exception_approvers.value.split(',')
                   .map(function (sysID, index) { return { id: sysID, label: state.selectedTask.exception_approvers.displayValue.split(',')[index] } })
               : []}
             className='recro-task-form' name='exception_approvers'
-            label={task.exception_approvers.label} search='initial'
+            label={task.exception_approvers.label} search='managed'
             required={state.selectedTask.status && state.selectedTask.status.value === 'Exception Approved'}
             invalid={state.selectedTask.exception_approvers && !(state.selectedTask.exception_approvers.value)}
-            disabled={!task.exception_approvers.canWrite}
-          ><now-button on-click={() => updateState({ isModalOpen: true })} slot='end' icon='magnifying-glass-plus-outline' size='sm' className='inputBtnIcon' tooltip-content='Search record' />
+          >
+            <now-button
+              on-click={() => updateState({ isModalOpen: true })} slot='end' icon='magnifying-glass-plus-outline'
+              disabled={!task.exception_approvers.canWrite}
+              size='sm' className='inputBtnIcon' tooltip-content='Search record'
+            />
           </now-typeahead-multi>
         </div>
         )
@@ -237,13 +240,51 @@ createCustomElement('recro-task-accordion', {
       dataParam: 'data',
       successActionType: 'TASK_BUTTON_SAVE_SUCCESS'
     }),
+    'TASK_USERS#SEARCH': createHttpEffect('api/now/table/:table', {
+      batch: false,
+      method: 'GET',
+      headers: {
+        Accepts: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      pathParams: ['table'],
+      queryParams: ['sysparm_fields', 'sysparm_limit', 'sysparm_query'],
+      successActionType: 'TASK_USERS_SEARCH_SUCCESS'
+    }),
+    TASK_USERS_SEARCH_REQUESTED: ({ action, dispatch, updateState, state, properties }) => {
+      const { value } = action.payload
+      const sysParmQuery = `nameSTARTSWITH${value}`
+      const valueLength = value.length
+
+      if (properties.debugMode) {
+        console.debug('value', value)
+        console.debug('sysParmQuery', sysParmQuery)
+        console.debug('valueLength', valueLength)
+      }
+
+      if (valueLength >= 3) {
+        dispatch('TASK_USERS#SEARCH', { sysparm_fields: 'name, sys_id', sysparm_query: sysParmQuery, table: 'sys_user', sysparm_limit: 50 })
+      }
+    },
     TASK_BUTTON_SAVE_SUCCESS: ({ action, dispatch, updateState, state, properties }) => {
       if (properties.debugMode) {
         console.debug('payload', action.payload)
       }
+
       dispatch('SAVE_BUTTON_WATCHED')
       dispatch('TASK_ACCORDION_REFRESH')
       updateState({ isAlertOpen: true })
+    },
+    TASK_USERS_SEARCH_SUCCESS: ({ action, dispatch, updateProperties, state, properties }) => {
+      const { result } = action.payload
+      if (properties.debugMode) {
+        console.debug('result', result)
+      }
+
+      if (result.length) {
+        const newUserItems = result.map(user => { return { id: user.sys_id, label: user.name } })
+        updateProperties({ userItems: newUserItems })
+      }
     },
     'NOW_ACCORDION_ITEM#CLICKED': ({ action, dispatch, updateState, state, properties }) => {
       if (!state.selectedTask.sys_id) {
@@ -380,6 +421,15 @@ createCustomElement('recro-task-accordion', {
 
       dispatch('SAVE_BUTTON_WATCHED')
     },
+    'NOW_TYPEAHEAD_MULTI#VALUE_SET': ({ action, dispatch, updateState, state, properties }) => {
+      const { name, value } = action.payload
+
+      if (properties.debugMode) {
+        console.debug('name:', name)
+        console.debug('invalid:', value)
+      }
+      dispatch('TASK_USERS_SEARCH_REQUESTED', { value })
+    },
     'NOW_MODAL#OPENED_SET': ({ action, dispatch, updateState, state, properties }) => {
       const { value } = action.payload
 
@@ -441,7 +491,7 @@ createCustomElement('recro-task-accordion', {
     statusItems: {
       default: []
     },
-    approverItems: {
+    userItems: {
       default: []
     },
     debugMode: {
