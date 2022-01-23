@@ -6,11 +6,18 @@
     margin: 1em;
 }
 
+.taskBtnBar {
+    display: grid;
+    align-items: center;
+    grid-template-columns: 75% 25%;
+    word-wrap: break-word;
+}
+
 .inputBtnIcon {
     margin: .25em;
 }
 
-.recro-accordion-item {
+.discover-accordion-item {
     background: #fcfcfc;
     border: solid;
     border-color: #e2e2e2;
@@ -19,7 +26,7 @@
     margin-bottom: .25em;
 }
 
-.recro-alert-bar {
+.discover-alert-bar {
     padding: .5em;
     animation-name: fadegrow;
     animation-duration: 1s;
@@ -41,22 +48,22 @@
     }
 }
 
-.recro-task-description {
+.discover-task-description {
     margin-bottom: 3em;
     margin-left: 1em;
 }
 
-.recro-task-form {
+.discover-task-form {
     padding: .5em;
     display: flow-root
 }
 
-.recro-form-wrapper {
+.discover-form-wrapper {
 	position: relative;
 	margin: 2.5em .5em 1em .5em;
 }
 
-.recro-form-wrapper > label {
+.discover-form-wrapper > label {
     position: absolute;
     bottom: 2.25em;
     left: .25em;

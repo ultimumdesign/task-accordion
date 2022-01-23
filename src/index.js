@@ -1,1 +1,1 @@
-import './recro-task-accordion';
+import './discover-task-accordion'

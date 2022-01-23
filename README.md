@@ -1,4 +1,4 @@
-@recro/task-accordion
+@discover/task-accordion
 ===============================================
 
 

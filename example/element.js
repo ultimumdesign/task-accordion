@@ -1,8 +1,8 @@
-import '../src/recro-task-accordion';
+import '../src/discover-task-accordion'
 
-const el = document.createElement('DIV');
-document.body.appendChild(el);
+const el = document.createElement('DIV')
+document.body.appendChild(el)
 
-el.innerHTML = `		
-<recro-task-accordion></recro-task-accordion>
-`;
+el.innerHTML = `
+<discover-task-accordion></discover-task-accordion>
+`

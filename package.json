@@ -1,12 +1,12 @@
 {
-	"name": "@recro/task-accordion",
+	"name": "@discover/task-accordion",
 	"version": "0.0.1",
 	"private": false,
 	"description": "",
 	"keywords": [
 		"ServiceNow",
 		"Now Experience UI Component",
-		"@recro/task-accordion"
+		"@discover/task-accordion"
 	],
 	"readme": "./README.md",
 	"engines": {
@@ -25,6 +25,7 @@
 		"@servicenow/now-highlighted-value": "^19.8.2-ecd",
 		"@servicenow/now-icon": "^19.8.2-ecd",
 		"@servicenow/now-input": "^19.8.2-ecd",
+		"@servicenow/now-label-value": "^19.8.2-ecd",
 		"@servicenow/now-modal": "^19.8.2-ecd",
 		"@servicenow/now-rich-text": "^19.8.2-ecd",
 		"@servicenow/now-textarea": "^19.8.2-ecd",

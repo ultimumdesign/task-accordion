@@ -1,6 +1,6 @@
 {
 	"components": {
-		"recro-task-accordion": {
+		"recro-accordion": {
 			"innerComponents": [
 				"now-accordion",
 				"now-alert",
@@ -68,5 +68,5 @@
 			]
 		}
 	},
-	"scopeName": "x_recro_recro_ta_0"
+	"scopeName": "x_difs_task_accord"
 }
