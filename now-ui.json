@@ -1,6 +1,6 @@
 {
 	"components": {
-		"recro-accordion": {
+		"discover-accordion": {
 			"innerComponents": [
 				"now-accordion",
 				"now-alert",
@@ -39,6 +39,8 @@
 					"description": "Name of table to pull tasks forms",
 					"readOnly": false,
 					"required": false,
+					"fieldType": "table_name",
+					"valueType": "string",
 					"defaultValue": ""
 				},
 				{

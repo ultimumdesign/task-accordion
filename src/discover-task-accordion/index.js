@@ -242,7 +242,7 @@ const view = (state, { updateState, dispatch }) => {
   )
 }
 
-createCustomElement('recro-accordion', {
+createCustomElement('discover-accordion', {
   actionHandlers: {
     'TASK_BUTTON#SAVE': createHttpEffect('api/now/table/:table/:id', {
       batch: false,
