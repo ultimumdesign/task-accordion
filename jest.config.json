@@ -1,0 +1,12 @@
+{
+  "clearMocks": true,
+  "coverageDirectory": "coverage",
+  "moduleDirectories": [
+    "node_modules",
+    "src"
+  ],
+  "testEnvironment": "jsdom",
+  "transform": {
+    "^.+\\.jsx?$": "babel-jest"
+  }
+}

@@ -17,6 +17,11 @@
     margin: .25em;
 }
 
+.discover-accordion-content {
+    max-width: 70vw;
+    min-width: 500px;
+}
+
 .discover-accordion-item {
     background: #fcfcfc;
     border: solid;
@@ -55,6 +60,7 @@
 
 .discover-task-form {
     padding: .5em;
+    max-width: inherit;
     display: flow-root
 }
 
